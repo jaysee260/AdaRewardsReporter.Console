@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using ADARewardsReporter.Models;
-using Microsoft.Extensions.Configuration;
+﻿using System.Threading.Tasks;
 using NDesk.Options;
-using RestSharp;
 
 namespace ADARewardsReporter
 {
@@ -26,37 +20,15 @@ namespace ADARewardsReporter
                 System.Console.WriteLine("A stake address must be provided. Aborting.");
                 return;
             }
-
-            var config = new ConfigurationBuilder()
-                                .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-                                .AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true)
-                                .Build();
-
-            var authenticationHeaderKey = config["AuthenticationHeaderKey"];
-            var apiKey = config["ApiKey"];
-            var mainnetBaseUrl = config["MainnetBaseUrl"];
-            var stakeRewardsUriTemplate = config["StakeRewardsUriTemplate"];
-
-            var client = new RestClient(mainnetBaseUrl);
-            client.AddDefaultHeader(authenticationHeaderKey, apiKey);
-            var stakeRewardsUri = string.Format(stakeRewardsUriTemplate, stakeAddress);
-            var request = new RestRequest(stakeRewardsUri);
-            var response = await client.GetAsync<List<RewardHistoryEntry>>(request);
             
-            var adaRewardsToDate = response.Select(x => x.Amount).Select(ConvertLovelaceToAda).Sum();
-            System.Console.WriteLine($"Total rewards to date: {adaRewardsToDate} ADA\n");
-            foreach (var reward in response)
-            {
-                System.Console.WriteLine($"Epoch {reward.Epoch}     {ConvertLovelaceToAda(reward.Amount)} ADA");
-            }
-        }
+            var blockchainClient = new BlockfrostClient(
+                ConfigManager.GetConfigurationvalue("MainnetBaseUrl"),
+                ConfigManager.GetConfigurationvalue("AuthenticationHeaderKey"),
+                ConfigManager.GetConfigurationvalue("ApiKey")
+            );
 
-        public static decimal ConvertLovelaceToAda(string amount)
-        {
-            var lovelaceToAdaRatio = 0.000001M;
-            var amountInLovelace = Int32.Parse(amount);
-            var amountInAda = (decimal)(amountInLovelace * lovelaceToAdaRatio);
-            return amountInAda;
+            var rewardsReporter = new RewardsReporter(blockchainClient);
+            await rewardsReporter.RunAsync(stakeAddress);
         }
     }
 }
