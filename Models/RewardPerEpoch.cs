@@ -2,7 +2,7 @@ using Newtonsoft.Json;
 
 namespace ADARewardsReporter.Models
 {
-    public class RewardHistoryEntry
+    public class RewardPerEpoch
     {
         public int Epoch { get; set; }
         public string Amount { get; set; }
