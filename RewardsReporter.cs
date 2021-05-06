@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using ADARewardsReporter.Models;
-using ConsoleTables;
 
 namespace ADARewardsReporter
 {
@@ -22,18 +21,16 @@ namespace ADARewardsReporter
             var rewardsHistory = await GetRewardsHistoryAsync(stakeAddress);
             var rewardsHistoryOrderedByEpochInAsc = rewardsHistory.OrderBy(x => x.Epoch).ToList();
 
-            // Get epoch information
+            // Get epochs details
             var epochNumbers = rewardsHistory.Select(x => x.Epoch);
-            var epochs = await GetEpochsMetadataAsync(epochNumbers);
+            var epochs = await GetEpochsDetailsAsync(epochNumbers);
             var epochsOrderedInAsc = epochs.OrderBy(x => x.Epoch).ToList();
 
             // Produce Rewards Per Epoch Summary
             var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistoryOrderedByEpochInAsc, epochsOrderedInAsc);
 
             // Print summary
-            var adaRewardsToDate = rewardsHistoryOrderedByEpochInAsc.Select(x => x.Amount).Select(ConvertLovelaceToAda).Sum();
-            System.Console.WriteLine($"Total rewards to date: {adaRewardsToDate} ADA\n");
-            ConsoleTable.From<RewardsPerEpochSummary>(rewardsSummary).Write();
+            PrintSummaryToConsole(rewardsSummary);
         }
 
         private async Task<IEnumerable<RewardPerEpoch>> GetRewardsHistoryAsync(string stakeAddress)
@@ -44,7 +41,7 @@ namespace ADARewardsReporter
             return rewardsHistory;
         }
 
-        private async Task<IEnumerable<CardanoEpoch>> GetEpochsMetadataAsync(IEnumerable<int> epochNumbers)
+        private async Task<IEnumerable<CardanoEpoch>> GetEpochsDetailsAsync(IEnumerable<int> epochNumbers)
         {
             var epochsTasks = epochNumbers.Select(e => _blockchainClient.QueryAsync<CardanoEpoch>($"epochs/{e}"));
             var epochsTasksResolved = await Task.WhenAll(epochsTasks);
@@ -88,6 +85,13 @@ namespace ADARewardsReporter
             var nextEpochEndDate = epochEndDate.AddDays(daysInOneEpoch);
             var shortDateString = nextEpochEndDate.DateTime.ToShortDateString();
             return shortDateString;
+        }
+
+        private void PrintSummaryToConsole(IEnumerable<RewardsPerEpochSummary> rewardsSummary)
+        {
+            var adaRewardsToDate = rewardsSummary.Select(x => x.Amount).Sum();
+            System.Console.WriteLine($"Total rewards to date: {adaRewardsToDate} ADA\n");
+            TableBuilder.BuildTableFrom(rewardsSummary).Write();
         }
     }
 }
