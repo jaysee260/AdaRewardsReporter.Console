@@ -26,8 +26,11 @@ namespace ADARewardsReporter
             var epochs = await GetEpochsDetailsAsync(epochNumbers);
             var epochsOrderedInAsc = epochs.OrderBy(x => x.Epoch).ToList();
 
+            // Get map of stake pool for each epoch
+            var stakePoolForEachEpoch = await GetMapOfStakePoolForEachEpochAsync(rewardsHistoryOrderedByEpochInAsc);
+
             // Produce Rewards Per Epoch Summary
-            var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistoryOrderedByEpochInAsc, epochsOrderedInAsc);
+            var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistoryOrderedByEpochInAsc, epochsOrderedInAsc, stakePoolForEachEpoch);
 
             // Print summary
             PrintSummaryToConsole(rewardsSummary);
@@ -48,7 +51,33 @@ namespace ADARewardsReporter
             return epochsTasksResolved;
         }
 
-        private IEnumerable<RewardsPerEpochSummary> ProduceRewardsPerEpochSummary(List<RewardPerEpoch> rewardsHistory, List<CardanoEpoch> epochs)
+        private async Task<Dictionary<int, StakePool>> GetMapOfStakePoolForEachEpochAsync(IEnumerable<RewardPerEpoch> rewardsHistory)
+        {
+            var poolIdForEachEpoch = new Dictionary<int, string>();
+            rewardsHistory.ToList().ForEach(x =>  poolIdForEachEpoch.Add(x.Epoch, x.PoolId));
+            var uniquePoolIds = rewardsHistory.Select(x => x.PoolId).Distinct();
+            List<StakePool> stakePools = new List<StakePool>();
+            foreach (var poolId in uniquePoolIds)
+            {
+                var stakePool = await _blockchainClient.QueryAsync<StakePool>($"pools/{poolId}/metadata");
+                stakePool.PoolId = poolId;
+                stakePools.Add(stakePool);
+            }
+            var stakePoolForEachEpoch = new Dictionary<int, StakePool>();
+            foreach (var set in poolIdForEachEpoch)
+            {
+                var stakePool = stakePools.Find(x => x.PoolId.Equals(set.Value));
+                stakePoolForEachEpoch.Add(set.Key, stakePool);
+            }
+
+            return stakePoolForEachEpoch;
+        }
+
+        private IEnumerable<RewardsPerEpochSummary> ProduceRewardsPerEpochSummary(
+            List<RewardPerEpoch> rewardsHistory,
+            List<CardanoEpoch> epochs,
+            Dictionary<int, StakePool> stakePoolForEachEpoch
+        )
         {
             var length = rewardsHistory.Count() == epochs.Count()
                 ? rewardsHistory.Count()
@@ -64,6 +93,13 @@ namespace ADARewardsReporter
                     RewardsReceivedOn = ConvertUnixTimestampToRewardsReceivedDate(epochs[i].EndTime)
                 };
                 rewardsSummary.Add(rewardSummary);
+            }
+
+            foreach (var summary in rewardsSummary)
+            {
+                var stakePool = stakePoolForEachEpoch[summary.Epoch];
+                var stakePoolDescription = $"{stakePool.Name} [{stakePool.Ticker}]";
+                summary.StakePool = stakePoolDescription;
             }
 
             return rewardsSummary;
