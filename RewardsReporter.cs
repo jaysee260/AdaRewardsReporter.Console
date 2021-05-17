@@ -15,22 +15,26 @@ namespace ADARewardsReporter
             _blockchainClient = blockchainClient ?? throw new ArgumentNullException();    
         }
 
-        public async Task RunAsync(string stakeAddress)
+        public async Task RunAsync(string stakeAddress, OrderBy orderBy)
         {
             // Get rewards history
-            var rewardsHistory = await GetRewardsHistoryAsync(stakeAddress);
-            var rewardsHistoryOrderedByEpochInAsc = rewardsHistory.OrderBy(x => x.Epoch).ToList();
+            var rewardsHistory = await GetRewardsHistoryAsync(stakeAddress); 
+            var rewardsHistoryOrderedByEpoch = orderBy == OrderBy.Desc 
+                ? rewardsHistory.OrderByDescending(x => x.Epoch)
+                : rewardsHistory.OrderBy(x => x.Epoch);
 
             // Get epochs details
             var epochNumbers = rewardsHistory.Select(x => x.Epoch);
             var epochs = await GetEpochsDetailsAsync(epochNumbers);
-            var epochsOrderedInAsc = epochs.OrderBy(x => x.Epoch).ToList();
+            var orderedEpochs = orderBy == OrderBy.Desc
+                ? epochs.OrderByDescending(x => x.Epoch)
+                : epochs.OrderBy(x => x.Epoch);
 
             // Get map of stake pool for each epoch
-            var stakePoolForEachEpoch = await GetMapOfStakePoolForEachEpochAsync(rewardsHistoryOrderedByEpochInAsc);
+            var stakePoolForEachEpoch = await GetMapOfStakePoolForEachEpochAsync(rewardsHistoryOrderedByEpoch);
 
             // Produce Rewards Per Epoch Summary
-            var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistoryOrderedByEpochInAsc, epochsOrderedInAsc, stakePoolForEachEpoch);
+            var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistoryOrderedByEpoch.ToList(), orderedEpochs.ToList(), stakePoolForEachEpoch);
 
             // Print summary
             PrintSummaryToConsole(rewardsSummary);

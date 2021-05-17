@@ -1,4 +1,6 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
+using ADARewardsReporter.Models;
 using NDesk.Options;
 
 namespace ADARewardsReporter
@@ -8,10 +10,12 @@ namespace ADARewardsReporter
         static async Task Main(string[] args)
         {
             string stakeAddress = null;
+            OrderBy orderBy = OrderBy.Desc;
 
             var options = new OptionSet
             {
-                { "stakeAddress=", v => stakeAddress = v }
+                { "stakeAddress=", v => stakeAddress = v },
+                { "orderBy=", v => Enum.TryParse<OrderBy>(v, true, out orderBy) }
             };
             options.Parse(args);
 
@@ -28,7 +32,7 @@ namespace ADARewardsReporter
             );
 
             var rewardsReporter = new RewardsReporter(blockchainClient);
-            await rewardsReporter.RunAsync(stakeAddress);
+            await rewardsReporter.RunAsync(stakeAddress, orderBy);
         }
     }
 }
