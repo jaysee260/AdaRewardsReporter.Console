@@ -44,8 +44,7 @@ namespace ADARewardsReporter
 
         private async Task<IEnumerable<RewardPerEpoch>> GetRewardsHistoryAsync(string stakeAddress)
         {
-            var stakeRewardsUriTemplate = ConfigManager.GetConfigurationvalue("StakeRewardsUriTemplate");
-            var stakeRewardsUri = string.Format(stakeRewardsUriTemplate, stakeAddress);
+            var stakeRewardsUri = string.Format("accounts/{0}/rewards", stakeAddress);
             var rewardsHistory = await _blockchainClient.QueryAsync<List<RewardPerEpoch>>(stakeRewardsUri);
             return rewardsHistory;
         }
