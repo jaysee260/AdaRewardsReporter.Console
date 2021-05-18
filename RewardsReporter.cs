@@ -19,39 +19,27 @@ namespace ADARewardsReporter
 
         public async Task RunAsync(string stakeAddress, OrderBy orderBy)
         {
-            // Get rewards history
-            var rewardsHistory = await GetRewardsHistoryAsync(stakeAddress); 
-            var rewardsHistoryOrderedByEpoch = orderBy == OrderBy.Desc 
-                ? rewardsHistory.OrderByDescending(x => x.Epoch)
-                : rewardsHistory.OrderBy(x => x.Epoch);
+            var rewardsHistory = await GetRewardsHistoryAsync(stakeAddress, orderBy); 
 
-            // Get epochs details
-            var epochNumbers = rewardsHistory.Select(x => x.Epoch);
-            var epochs = await GetEpochsDetailsAsync(epochNumbers);
-            var orderedEpochs = orderBy == OrderBy.Desc
-                ? epochs.OrderByDescending(x => x.Epoch)
-                : epochs.OrderBy(x => x.Epoch);
+            var epochs = await GetEpochsDetailsAsync(rewardsHistory.Select(x => x.Epoch), orderBy);
 
-            // Get map of stake pool for each epoch
-            var stakePoolForEachEpoch = await GetMapOfStakePoolForEachEpochAsync(rewardsHistoryOrderedByEpoch);
+            var stakePoolForEachEpoch = await GetMapOfStakePoolForEachEpochAsync(rewardsHistory);
 
-            // Produce Rewards Per Epoch Summary
-            var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistoryOrderedByEpoch.ToList(), orderedEpochs.ToList(), stakePoolForEachEpoch);
+            var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistory.ToList(), epochs.ToList(), stakePoolForEachEpoch);
 
-            // Print summary
             PrintSummaryToConsole(rewardsSummary);
         }
 
-        private async Task<IEnumerable<RewardPerEpoch>> GetRewardsHistoryAsync(string stakeAddress)
+        private async Task<IEnumerable<RewardPerEpoch>> GetRewardsHistoryAsync(string stakeAddress, OrderBy orderBy)
         {
-            var stakeRewardsUri = string.Format("accounts/{0}/rewards", stakeAddress);
+            var stakeRewardsUri = string.Format("accounts/{0}/rewards?order={1}", stakeAddress, orderBy.ToString().ToLower());
             var rewardsHistory = await _blockchainClient.QueryAsync<List<RewardPerEpoch>>(stakeRewardsUri);
             return rewardsHistory;
         }
 
-        private async Task<IEnumerable<CardanoEpoch>> GetEpochsDetailsAsync(IEnumerable<int> epochNumbers)
+        private async Task<IEnumerable<CardanoEpoch>> GetEpochsDetailsAsync(IEnumerable<int> epochNumbers, OrderBy orderBy)
         {
-            var epochsTasks = epochNumbers.Select(e => _blockchainClient.QueryAsync<CardanoEpoch>($"epochs/{e}"));
+            var epochsTasks = epochNumbers.Select(e => _blockchainClient.QueryAsync<CardanoEpoch>($"epochs/{e}?orderBy={orderBy.ToString().ToLower()}"));
             var epochsTasksResolved = await Task.WhenAll(epochsTasks);
             return epochsTasksResolved;
         }
@@ -61,6 +49,7 @@ namespace ADARewardsReporter
             var poolIdForEachEpoch = new Dictionary<int, string>();
             rewardsHistory.ToList().ForEach(x =>  poolIdForEachEpoch.Add(x.Epoch, x.PoolId));
             var uniquePoolIds = rewardsHistory.Select(x => x.PoolId).Distinct();
+
             List<StakePool> stakePools = new List<StakePool>();
             foreach (var poolId in uniquePoolIds)
             {
@@ -68,6 +57,7 @@ namespace ADARewardsReporter
                 stakePool.PoolId = poolId;
                 stakePools.Add(stakePool);
             }
+            
             var stakePoolForEachEpoch = new Dictionary<int, StakePool>();
             foreach (var set in poolIdForEachEpoch)
             {
