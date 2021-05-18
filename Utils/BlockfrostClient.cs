@@ -1,8 +1,9 @@
 using System;
 using System.Threading.Tasks;
+using ADARewardsReporter.Interfaces;
 using RestSharp;
 
-namespace ADARewardsReporter
+namespace ADARewardsReporter.Utils
 {
     public class BlockfrostClient : ICardanoBlockchainClient
     {

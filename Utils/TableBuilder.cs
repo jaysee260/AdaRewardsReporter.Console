@@ -5,7 +5,7 @@ using System.Linq;
 using System.Reflection;
 using ConsoleTables;
 
-namespace ADARewardsReporter
+namespace ADARewardsReporter.Utils
 {
     public static class TableBuilder
     {

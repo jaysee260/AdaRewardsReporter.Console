@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ADARewardsReporter.Interfaces;
 using ADARewardsReporter.Models;
+using ADARewardsReporter.Utils;
 
 namespace ADARewardsReporter
 {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using ADARewardsReporter.Models;
+using ADARewardsReporter.Utils;
 using NDesk.Options;
 
 namespace ADARewardsReporter

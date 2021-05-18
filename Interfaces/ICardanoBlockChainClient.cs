@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace ADARewardsReporter
+namespace ADARewardsReporter.Interfaces
 {
     public interface ICardanoBlockchainClient
     {

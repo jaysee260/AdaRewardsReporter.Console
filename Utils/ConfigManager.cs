@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace ADARewardsReporter
+namespace ADARewardsReporter.Utils
 {
     public static class ConfigManager
     {
