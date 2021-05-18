@@ -11,18 +11,20 @@ namespace ADARewardsReporter
         static async Task Main(string[] args)
         {
             string stakeAddress = null;
+            string regularAddress = null;
             OrderBy orderBy = OrderBy.Desc;
 
             var options = new OptionSet
             {
                 { "stakeAddress=", v => stakeAddress = v },
+                { "regularAddress=", v => regularAddress = v },
                 { "orderBy=", v => Enum.TryParse<OrderBy>(v, true, out orderBy) }
             };
             options.Parse(args);
 
-            if (stakeAddress == null)
+            if (stakeAddress == null && regularAddress == null)
             {
-                System.Console.WriteLine("A stake address must be provided. Aborting.");
+                Console.WriteLine("A stake address or a regular address must be provided. Aborting.");
                 return;
             }
             
@@ -31,6 +33,12 @@ namespace ADARewardsReporter
                 ConfigManager.GetConfigurationvalue("AuthenticationHeaderKey"),
                 ConfigManager.GetConfigurationvalue("ApiKey")
             );
+
+            if (stakeAddress == null && regularAddress != null)
+            {
+                var address = await blockchainClient.QueryAsync<CardanoAddress>($"addresses/{regularAddress}");
+                stakeAddress = address.StakeAddress;
+            }
 
             var rewardsReporter = new RewardsReporter(blockchainClient);
             await rewardsReporter.RunAsync(stakeAddress, orderBy);

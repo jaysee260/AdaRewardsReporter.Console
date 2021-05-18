@@ -25,6 +25,9 @@ To get an API key, you can create a free developer account at [blockfrost.io](ht
 ### stakeAddress (_required_)
 The stake address of the wallet from which ADA is being staked. AFAIK, [Daedalus](https://daedaluswallet.io/[) and [Yoroi](https://yoroi-wallet.com/#/) give you access to your stake address, but [Exodus](https://www.exodus.com/ada-cardano-wallet) doesn't.
 
+### regularAddress (_optional_ | _required if provided instead of stakeAddress_)
+A regular Cardano address used to send and receive ADA. If provided instead of the stake address, it will be used to resolve the stake address associated with the account. If provided in tandem with the stake address, it will be ignored. Using `regularAddress` instead of `stakeAddress` can be useful when staking in a wallet like Exodus where you don't have direct access to your stake address.
+
 ### orderBy (_optional_)
 The order, by epoch, in which to show rewards history in the report. The default value is `desc`. Possible values are `desc` or `asc`.
 
