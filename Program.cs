@@ -13,12 +13,14 @@ namespace ADARewardsReporter
             string stakeAddress = null;
             string regularAddress = null;
             OrderBy orderBy = OrderBy.Desc;
+            bool exportToCsv = false;
 
             var options = new OptionSet
             {
                 { "stakeAddress=", v => stakeAddress = v },
                 { "regularAddress=", v => regularAddress = v },
-                { "orderBy=", v => Enum.TryParse<OrderBy>(v, true, out orderBy) }
+                { "orderBy=", v => Enum.TryParse<OrderBy>(v, true, out orderBy) },
+                { "exportToCsv", v => exportToCsv = true }
             };
             options.Parse(args);
 
@@ -40,8 +42,8 @@ namespace ADARewardsReporter
                 stakeAddress = address.StakeAddress;
             }
 
-            var rewardsReporter = new RewardsReporter(blockchainClient);
-            await rewardsReporter.RunAsync(stakeAddress, orderBy);
+            var rewardsReporter = new RewardsReporter(blockchainClient, new ReportWriter());
+            await rewardsReporter.RunAsync(stakeAddress, orderBy, exportToCsv);
         }
     }
 }

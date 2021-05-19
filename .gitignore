@@ -3,3 +3,4 @@ obj
 .vscode
 appsettings.Local.json
 scratchpad.txt
+*.csv

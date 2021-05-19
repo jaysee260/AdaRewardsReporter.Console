@@ -11,13 +11,15 @@ namespace ADARewardsReporter
     public class RewardsReporter
     {
         private readonly ICardanoBlockchainClient _blockchainClient;
+        private readonly ICsvReportWriter _reportWriter;
 
-        public RewardsReporter(ICardanoBlockchainClient blockchainClient)
+        public RewardsReporter(ICardanoBlockchainClient blockchainClient, ICsvReportWriter reportWriter)
         {
-            _blockchainClient = blockchainClient ?? throw new ArgumentNullException();    
+            _blockchainClient = blockchainClient ?? throw new ArgumentNullException();
+            _reportWriter = reportWriter ?? throw new ArgumentNullException();
         }
 
-        public async Task RunAsync(string stakeAddress, OrderBy orderBy)
+        public async Task RunAsync(string stakeAddress, OrderBy orderBy, bool exportToCsv)
         {
             var rewardsHistory = await GetRewardsHistoryAsync(stakeAddress, orderBy); 
 
@@ -28,6 +30,7 @@ namespace ADARewardsReporter
             var rewardsSummary = ProduceRewardsPerEpochSummary(rewardsHistory.ToList(), epochs.ToList(), stakePoolForEachEpoch);
 
             PrintSummaryToConsole(rewardsSummary);
+            if (exportToCsv) _reportWriter.WriteReport(rewardsSummary);
         }
 
         private async Task<IEnumerable<RewardPerEpoch>> GetRewardsHistoryAsync(string stakeAddress, OrderBy orderBy)
