@@ -2,7 +2,7 @@
 
 ## About
 
-A console application for reporting on total ADA staking rewards earned to date, broken down by epoch. Output is printed on the console in the form of a table.
+A console application for reporting on total ADA staking rewards earned to date, broken down by epoch. Output is printed on the console in the form of a table, or it can be optionally written to a CSV file.
 
 The [Blockfrost](https://blockfrost.io/) API is used to query the [Cardano](https://cardano.org/) blockchain.
 
