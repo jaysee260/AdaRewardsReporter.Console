@@ -31,8 +31,15 @@ A regular Cardano address used to send and receive ADA. If provided instead of t
 ### orderBy (_optional_)
 The order, by epoch, in which to show rewards history in the report. The default value is `desc`. Possible values are `desc` or `asc`.
 
+### exportToCsv (_optional_)
+Setting this flag will output a CSV file to the project's root directory with the contents of the report.
+
 ## How to run
 
 ```
 dotnet run -- --stakeAddress=<your_stake_address>
+```
+
+```
+dotnet run -- --stakeAddress=<your_stake_address> --exportToCsv
 ```
