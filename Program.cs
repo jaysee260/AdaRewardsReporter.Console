@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
-using ADARewardsReporter.Models;
-using ADARewardsReporter.Utils;
+using AdaRewardsReporter.Core.Utils;
 using NDesk.Options;
+using AdaRewardsReporter.Core;
+using AdaRewardsReporter.Core.Models;
+using AdaRewardsReporter.Console.Utils;
 
-namespace ADARewardsReporter
+namespace AdaRewardsReporter.Console
 {
     class Program
     {
@@ -26,24 +28,28 @@ namespace ADARewardsReporter
 
             if (stakeAddress == null && regularAddress == null)
             {
-                Console.WriteLine("A stake address or a regular address must be provided. Aborting.");
+                System.Console.WriteLine("A stake address or a regular address must be provided. Aborting.");
                 return;
             }
             
-            var blockchainClient = new BlockfrostClient(
-                ConfigManager.GetConfigurationvalue("MainnetBaseUrl"),
-                ConfigManager.GetConfigurationvalue("AuthenticationHeaderKey"),
-                ConfigManager.GetConfigurationvalue("ApiKey")
-            );
 
+            var blockchainClient = new BlockfrostClient(ConfigManager.GetConfiguration());
+            
             if (stakeAddress == null && regularAddress != null)
             {
                 var address = await blockchainClient.QueryAsync<CardanoAddress>($"addresses/{regularAddress}");
                 stakeAddress = address.StakeAddress;
             }
 
-            var rewardsReporter = new RewardsReporter(blockchainClient, new ReportWriter());
-            await rewardsReporter.RunAsync(stakeAddress, orderBy, exportToCsv);
+            var rewardsReporter = new RewardsReporter(blockchainClient);
+            var rewardsSummary = await rewardsReporter.GenerateReportAsync(stakeAddress, orderBy);
+
+            TableHelper.PrintSummaryToConsole(rewardsSummary);
+
+            if (exportToCsv)
+            {
+                new ReportWriter().WriteReport(rewardsSummary);
+            }
         }
     }
 }

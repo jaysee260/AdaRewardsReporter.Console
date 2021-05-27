@@ -1,6 +1,6 @@
 using Microsoft.Extensions.Configuration;
 
-namespace ADARewardsReporter.Utils
+namespace AdaRewardsReporter.Console.Utils
 {
     public static class ConfigManager
     {
@@ -10,9 +10,12 @@ namespace ADARewardsReporter.Utils
             .AddEnvironmentVariables()
             .Build();
 
+        public static IConfiguration GetConfiguration() => _config;
+        
         public static string GetConfigurationvalue(string key)
         {
             return _config[key];
         }
+
     }
 }
