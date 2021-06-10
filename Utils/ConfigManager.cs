@@ -13,6 +13,5 @@ namespace AdaRewardsReporter.Console.Utils
         public static IConfiguration GetConfiguration() => _config;
         
         public static string GetConfigurationvalue(string key) => _config[key];
-
     }
 }
