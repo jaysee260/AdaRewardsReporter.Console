@@ -4,3 +4,4 @@ obj
 appsettings.Local.json
 scratchpad.txt
 *.csv
+run.ps1
